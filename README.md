@@ -1,2 +1,3 @@
-# gd
-windows  go下的 duilib.  directui 界面库.
+# 学习windows api
+
+这个分支是学习 稳固windows api,
