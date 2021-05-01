@@ -7,7 +7,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/lxn/win"
+	"github.com/fjs-icu/win"
 )
 
 var initUI uint32
@@ -33,11 +33,12 @@ type WindowCfg struct {
 }
 
 type WindowBase struct {
-	Hwnd    win.HWND
-	Window  Window
-	Visible bool // 是否隐藏
-	Enabled bool // 是否禁用
-	Name    string
+	Hwnd         win.HWND
+	Window       Window
+	Visible      bool // 是否隐藏
+	Enabled      bool // 是否禁用
+	Name         string
+	PaintManager PaintManagerUI
 }
 
 func InitWindow(window, parent Window, className string, style, exStyle uint32) error {
@@ -97,6 +98,9 @@ func initWindowWithCfg(cfg *WindowCfg) error {
 		MustRegWinProcPtr(cfg.ClassName, defaultWndProcPtr)
 		// cfg.Style|win.WS_CLIPSIBLINGS
 		// 创建窗口
+		wb.Enabled = true
+
+		// unsafe.Pointer(wb) 创建后
 		wb.Hwnd = win.CreateWindowEx(
 			cfg.ExStyle,
 			syscall.StringToUTF16Ptr(cfg.ClassName),
@@ -109,13 +113,19 @@ func initWindowWithCfg(cfg *WindowCfg) error {
 			hwndParent,
 			0,
 			0,
-			nil)
+			unsafe.Pointer(wb))
 		if wb.Hwnd == 0 {
 			return NewErr("CreateWindowEx")
 		}
+		fmt.Println("wb hwnd", wb.Hwnd)
+
 	} else {
 		wb.Hwnd = hwnd
 	}
+
+	ustyle := win.GetWindowStyle(wb.Hwnd)
+	fmt.Println("ustyle : ", ustyle)
+
 	Hwnd2WindowBase[wb.Hwnd] = wb
 
 	return nil
@@ -129,22 +139,42 @@ func WindowFromHandle(hwnd win.HWND) Window {
 	return nil
 }
 
+type WindowBase2 struct {
+	Hwnd  win.HWND
+	Index int
+}
+
 func defaultWndProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) (result uintptr) {
 	// defer func() {
 	// }()
 
-	// if msg == notifyIconMessageId {
-	// 	return notifyIconWndProc(hwnd, msg, wParam, lParam)
-	// }
+	var wb *WindowBase
 
-	wi := WindowFromHandle(hwnd)
-	if wi == nil {
+	if msg == win.WM_NCCREATE {
+		fmt.Println("msg win.WM_NCCREATE ")
+		var p2 *win.CREATESTRUCT
+
+		p2 = (*win.CREATESTRUCT)(unsafe.Pointer(lParam))
+		// fmt.Println("size ", unsafe.Sizeof(*p2))
+		w := (*WindowBase)(unsafe.Pointer(p2.CreateParams))
+		if w == nil {
+			fmt.Println("w nil aaa", unsafe.Pointer(w))
+			panic("CreateParams nil")
+		}
+		win.SetWindowLongPtr(hwnd, win.GWLP_USERDATA, uintptr(unsafe.Pointer(w)))
+		// 设置后可收到 WM_CREATE 消息.
+	} else {
+		w2 := win.GetWindowLongPtr(hwnd, win.GWLP_USERDATA)
+		wb = (*WindowBase)(unsafe.Pointer(w2))
+
+	}
+	if wb == nil {
+		fmt.Println("DefWindowProc=================================", hwnd)
 		return win.DefWindowProc(hwnd, msg, wParam, lParam)
 	}
 
-	result = wi.WndProc(hwnd, msg, wParam, lParam)
+	return wb.WndProc(hwnd, msg, wParam, lParam)
 
-	return
 }
 
 func (c *WindowBase) Handle() win.HWND {
@@ -161,90 +191,93 @@ func (c *WindowBase) Run() {
 	var msg win.MSG
 	for {
 		if win.GetMessage(&msg, 0, 0, 0) == win.TRUE {
+			// ustyle := win.GetWindowStyle(msg.HWnd)
+			// fmt.Println("ustyle : ", ustyle)
+			// if !c.PaintManager.TranslateMessage(&msg) {
+			// 要处理一些事情
+			// }
+
 			win.TranslateMessage(&msg)
 			win.DispatchMessage(&msg)
+
 		} else {
 			break
 		}
 	}
+	fmt.Println("WindowBase end")
 }
 
 // 事件
 
-func (wb *WindowBase) WndProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) uintptr {
+func (c *WindowBase) WndProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) uintptr {
 	window := WindowFromHandle(hwnd)
 	_ = window
+	// fmt.Println("msg id ", msg, hwnd)
 	switch msg {
-	case win.WM_ERASEBKGND:
-		// WM_ERASEBKGND是在当窗口背景必须被擦除时,窗口的移动，窗口的大小的改变
-		return 1
+	// case win.WM_ERASEBKGND:
+	// 	// WM_ERASEBKGND是在当窗口背景必须被擦除时,窗口的移动，窗口的大小的改变
+	// 	return 1
 
-	case win.WM_HSCROLL, win.WM_VSCROLL:
-		if window := WindowFromHandle(win.HWND(lParam)); window != nil {
-			// The window that sent the notification shall handle it itself.
-			return window.WndProc(hwnd, msg, wParam, lParam)
+	// case win.WM_HSCROLL, win.WM_VSCROLL:
+	// 	if window := WindowFromHandle(win.HWND(lParam)); window != nil {
+	// 		// The window that sent the notification shall handle it itself.
+	// 		return window.WndProc(hwnd, msg, wParam, lParam)
+	// 	}
+
+	// case win.WM_LBUTTONDOWN, win.WM_MBUTTONDOWN, win.WM_RBUTTONDOWN:
+	// 移动事件
+	// wb.publishMouseEvent(&wb.mouseDownPublisher, msg, wParam, lParam)
+
+	// case win.WM_LBUTTONUP, win.WM_MBUTTONUP, win.WM_RBUTTONUP:
+	// if msg == win.WM_LBUTTONUP && wb.origWndProcPtr == 0 {
+	// 	// See WM_LBUTTONDOWN for why we require origWndProcPtr == 0 here.
+	// 	if !win.ReleaseCapture() {
+	// 		lastError("ReleaseCapture")
+	// 	}
+	// }
+	// wb.publishMouseEvent(&wb.mouseUpPublisher, msg, wParam, lParam)
+
+	// case win.WM_MOUSEMOVE:
+	// 	// wb.publishMouseEvent(&wb.mouseMovePublisher, msg, wParam, lParam)
+
+	// case win.WM_MOUSEWHEEL:
+	// 	// wb.publishMouseWheelEvent(&wb.mouseWheelPublisher, wParam, lParam)
+
+	// case win.WM_SETFOCUS, win.WM_KILLFOCUS:
+
+	// case win.WM_SETCURSOR:
+
+	// case win.WM_CONTEXTMENU:
+
+	// case win.WM_KEYDOWN:
+
+	// case win.WM_KEYUP:
+
+	// case win.WM_DROPFILES:
+
+	// case win.WM_WINDOWPOSCHANGED:
+
+	// case win.WM_THEMECHANGED:
+
+	case win.WM_CREATE:
+		{
+			fmt.Println("WM_CREATE...")
+			c.OnCreate(hwnd, msg, wParam, lParam)
+			break
 		}
-
-	case win.WM_LBUTTONDOWN, win.WM_MBUTTONDOWN, win.WM_RBUTTONDOWN:
-		// 移动事件
-		// wb.publishMouseEvent(&wb.mouseDownPublisher, msg, wParam, lParam)
-
-	case win.WM_LBUTTONUP, win.WM_MBUTTONUP, win.WM_RBUTTONUP:
-		// if msg == win.WM_LBUTTONUP && wb.origWndProcPtr == 0 {
-		// 	// See WM_LBUTTONDOWN for why we require origWndProcPtr == 0 here.
-		// 	if !win.ReleaseCapture() {
-		// 		lastError("ReleaseCapture")
-		// 	}
-		// }
-		// wb.publishMouseEvent(&wb.mouseUpPublisher, msg, wParam, lParam)
-
-	case win.WM_MOUSEMOVE:
-		// wb.publishMouseEvent(&wb.mouseMovePublisher, msg, wParam, lParam)
-
-	case win.WM_MOUSEWHEEL:
-		// wb.publishMouseWheelEvent(&wb.mouseWheelPublisher, wParam, lParam)
-
-	case win.WM_SETFOCUS, win.WM_KILLFOCUS:
-
-	case win.WM_SETCURSOR:
-
-	case win.WM_CONTEXTMENU:
-
-	case win.WM_KEYDOWN:
-
-	case win.WM_KEYUP:
-
-	case win.WM_DROPFILES:
-
-	case win.WM_WINDOWPOSCHANGED:
-
-	case win.WM_THEMECHANGED:
-
 	case win.WM_DESTROY:
-	case win.WM_PAINT:
-		var ps win.PAINTSTRUCT
-
-		hdc := win.BeginPaint(hwnd, &ps)
-
-		var lb win.LOGBRUSH
-		lb.LbStyle = win.BS_SOLID
-		lb.LbColor = 0xff000
-		lb.LbHatch = 0
-
-		hPen := win.HGDIOBJ(win.ExtCreatePen(win.PS_SOLID, 2, &lb, 0, nil))
-		hOldOpen := win.SelectObject(hdc, hPen)
-
-		var pt win.POINT
-		win.MoveToEx(hdc, 0, 0, &pt)
-		win.LineTo(hdc, 100, 100)
-		win.EndPaint(hwnd, &ps)
-
-		win.SelectObject(hdc, hOldOpen)
-		win.DeleteObject(hPen)
-		fmt.Println("paint....")
-
+		win.PostQuitMessage(0)
 		break
+	}
+	if c.PaintManager.MessageHandler(msg, wParam, lParam) {
+		return 0
 	}
 
 	return win.DefWindowProc(hwnd, msg, wParam, lParam)
+}
+
+func (c *WindowBase) OnCreate(hwnd win.HWND, msg uint32, wParam, lParam uintptr) {
+	fmt.Println(" OnCreate(hwnd win.HWND, msg uint32, wParam, lParam uintptr) ")
+	c.PaintManager.Init(hwnd, "")
+
 }

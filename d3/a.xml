@@ -1,0 +1,9 @@
+  <config name="">
+      <redis></redis>
+      <mysql>
+          <port>100</port>
+          <host>host</host>
+          <username>aa3</username>
+          <password>aa</password>
+      </mysql>
+  </config>

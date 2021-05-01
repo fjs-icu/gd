@@ -56,7 +56,7 @@ func wndProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) (result uintptr)
 	var ps win.PAINTSTRUCT
 	switch msg {
 	case win.WM_LBUTTONDOWN:
-		MsgBox("鼠标右键点击", "Win32_Mouse", win.MB_OK)
+		// MsgBox("鼠标右键点击", "Win32_Mouse", win.MB_OK)
 
 		break
 	// case WM_RBUTTONDOWN:
@@ -83,6 +83,13 @@ func wndProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) (result uintptr)
 		fmt.Println("paint....")
 
 		break
+	case win.WM_CREATE:
+		{
+			fmt.Println("create")
+			OnCreate(hwnd, msg, wParam, lParam)
+			brak
+		}
+
 	case win.WM_DESTROY:
 		win.PostQuitMessage(0)
 		break
@@ -90,4 +97,29 @@ func wndProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) (result uintptr)
 		return win.DefWindowProc(hwnd, msg, wParam, lParam)
 	}
 	return 0
+}
+
+type PaintManagerUI struct {
+	HWndPaint     win.HWND
+	Name          string
+	HDCPaint      win.HDC
+	HDcOffscreen  win.HDC
+	HDcBackground win.HDC
+}
+
+func (c *PaintManagerUI) Init(hWnd win.HWND, pstrName string) {
+	// 移除之前所有的控件
+
+	//初始化
+	c.Name = pstrName
+	// if( m_hWndPaint != hWnd ) {
+	// 	m_hWndPaint = hWnd;
+	// 	m_hDcPaint = ::GetDC(hWnd);
+	// 	m_aPreMessages.Add(this);
+	// }
+	if c.HWndPaint != hWnd {
+		c.HWndPaint = hWnd
+		c.HDCPaint = win.GetDC(hWnd)
+	}
+
 }

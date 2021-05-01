@@ -1,0 +1,9 @@
+mysql:
+  host: 192.168.1.0
+  password: root123
+  port: 3306
+  username: root123
+redis:
+  host: 127.0.0.1
+  port: 4405
+yaml: this is a example of yaml

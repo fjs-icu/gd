@@ -4,7 +4,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/fjs-icu/win"
+	"github.com/lxn/win"
 )
 
 // 必须先注册窗口类

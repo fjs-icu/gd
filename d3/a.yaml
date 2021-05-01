@@ -1,0 +1,12 @@
+config:
+  xmlname:
+    space: ""
+    local: ""
+  name: ""
+  redis: ""
+  mysql:
+    port: 0
+    host: ""
+    username: ""
+    password: ""
+verbose: true

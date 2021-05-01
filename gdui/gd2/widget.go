@@ -1,6 +1,6 @@
 package gd2
 
-import "github.com/fjs-icu/win"
+import "github.com/lxn/win"
 
 type WidgetBase struct {
 	WindowBase

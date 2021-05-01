@@ -1,0 +1,13 @@
+{
+  "config": {
+    "Name": "",
+    "redis": "",
+    "mysql": {
+      "port": 0,
+      "host": "",
+      "username": "",
+      "password": ""
+    }
+  },
+  "verbose": true
+}

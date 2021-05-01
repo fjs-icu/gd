@@ -2,4 +2,9 @@ module d2
 
 go 1.16
 
-require github.com/lxn/win v0.0.0-20210218163916-a377121e959e
+replace github.com/fjs-icu/win => ../../fjs-icu/win
+
+require (
+	github.com/fjs-icu/win v0.0.0-00010101000000-000000000000
+	github.com/go-ole/go-ole v1.2.5 // indirect
+)
