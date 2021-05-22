@@ -212,6 +212,8 @@ func (c *WindowBase) Run() {
 func (c *WindowBase) WndProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) uintptr {
 	window := WindowFromHandle(hwnd)
 	_ = window
+	// asBase := window.AsWindowBase()
+	asBase := c
 	// fmt.Println("msg id ", msg, hwnd)
 	switch msg {
 	// case win.WM_ERASEBKGND:
@@ -262,15 +264,18 @@ func (c *WindowBase) WndProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) 
 	case win.WM_CREATE:
 		{
 			fmt.Println("WM_CREATE...")
-			c.OnCreate(hwnd, msg, wParam, lParam)
-			break
+			asBase.OnCreate(hwnd, msg, wParam, lParam)
+			return 0
 		}
 	case win.WM_DESTROY:
 		win.PostQuitMessage(0)
 		break
 	}
-	if c.PaintManager.MessageHandler(msg, wParam, lParam) {
-		return 0
+	if asBase != nil {
+		v1, v2 := asBase.PaintManager.MessageHandler(msg, wParam, lParam)
+		if v1 {
+			return v2
+		}
 	}
 
 	return win.DefWindowProc(hwnd, msg, wParam, lParam)

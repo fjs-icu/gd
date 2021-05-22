@@ -55,8 +55,7 @@ func DrawRectRound(hdc win.HDC, rc win.RECT, size int) {
 	win.DeleteObject(hPen)
 
 }
-
-func DrawColor(hdc win.HDC) {
+func DrawImage(hdc win.HDC) {
 	var si win.GdiplusStartupInput
 	si.GdiplusVersion = 1
 	if status := win.GdiplusStartup(&si, nil); status != win.Ok {
@@ -72,6 +71,18 @@ func DrawColor(hdc win.HDC) {
 	bitmap := win.NewBitmapFromFile(`D:\code\src\github.com\gd\dog.bmp`)
 	fmt.Println(bitmap.GetHeight(), bitmap.GetWidth())
 	win.GdipDrawImageI(grs, bitmap.Image.Get(), 10, 10)
+}
+func DrawColor(hdc win.HDC, rc win.RECT, argb win.ARGB) {
+	var si win.GdiplusStartupInput
+	si.GdiplusVersion = 1
+	if status := win.GdiplusStartup(&si, nil); status != win.Ok {
+		fmt.Println("err", status)
+		// return nil, newError(fmt.Sprintf("GdiplusStartup failed with status '%s'", status))
+	}
+	defer win.GdiplusShutdown()
+	grs := new(win.GpGraphics)
+	win.GdipCreateFromHDC(hdc, &grs)
+	win.GdipGraphicsClear(grs, argb)
 	// var bi win.BITMAPINFO
 	// bi.BmiHeader.BiSize = uint32(unsafe.Sizeof(bi.BmiHeader))
 	// var bi win.BITMAPV5HEADER

@@ -23,3 +23,7 @@ func (c Rect) Bottom() int {
 func (c *Rect) IsZero() bool {
 	return c.X == 0 && c.Y == 0 && c.W == 0 && c.H == 0
 }
+
+type Size struct {
+	Cx, Cy int32
+}

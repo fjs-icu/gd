@@ -2,6 +2,7 @@ package gd2
 
 import (
 	"fmt"
+	"unsafe"
 
 	"github.com/fjs-icu/win"
 )
@@ -12,6 +13,14 @@ type PaintManagerUI struct {
 	HDCPaint      win.HDC
 	HDcOffscreen  win.HDC
 	HDcBackground win.HDC
+
+	// Root    DoControlUI
+	R1 []interface{}
+	R2 []interface{}
+
+	// RootXml *WindowXml
+	WindowUI *WindowUI
+	DialogBuilder
 }
 
 func (c *PaintManagerUI) Init(hWnd win.HWND, pstrName string) {
@@ -38,36 +47,69 @@ func (c *PaintManagerUI) Init(hWnd win.HWND, pstrName string) {
 		c.HWndPaint = hWnd
 		c.HDCPaint = win.GetDC(hWnd)
 	}
-
+	// c.Root = new(ControlUI)
+	build := new(DialogBuilder)
+	build.Create("test1.xml", c)
 }
 
-func (c *PaintManagerUI) MessageHandler(msg uint32, wParam, lParam uintptr) bool {
+func (c *PaintManagerUI) MessageHandler(msg uint32, wParam, lParam uintptr) (bool, uintptr) {
 	if c.HWndPaint == 0 {
-		return false
+		return false, 0
+
 	}
 	//fmt.Println("HWndPaint ====", c.HWndPaint)
 
 	// 处理分发事件...
 	switch msg {
+	case win.WM_NCHITTEST:
+		{
+			// 移动无标题栏的窗口(鼠标在客户区拖动移动窗口,非标题栏区域)
+			fmt.Println("nchi...")
+			x := int32(win.GET_X_LPARAM(lParam))
+			y := int32(win.GET_Y_LPARAM(lParam))
+			var pt win.POINT
+			pt.X = x
+			pt.Y = y
+			win.ScreenToClient(c.HWndPaint, &pt)
+			// var p2 *win.CREATESTRUCT
+
+			// p2 = (*win.CREATESTRUCT)(unsafe.Pointer(lParam))
+			return true, win.HTCAPTION
+
+			// return win.HTCAPTION
+		}
 	// case win.WM_ERASEBKGND:
 	case win.WM_PAINT:
 		var ps win.PAINTSTRUCT
 		hdc := win.BeginPaint(c.HWndPaint, &ps)
-		// image.draw(hdc, location)
-		var rc win.RECT
-		rc.Left = 10
-		rc.Top = 10
+		defer win.EndPaint(c.HWndPaint, &ps)
 
-		rc.Right = 200
-		rc.Bottom = 200
-		// size := 1
-		// DrawRect(hdc, rc, size)
-		// DrawRectRound(hdc, rc, size)
-		DrawColor(hdc)
+		// if c.Root == nil {
+		// 	// 如果没有根目录,则绘制黑色区域
 
-		// win.SetBkColor(hdc, win.COLORREF(0xff0000))
-		win.EndPaint(c.HWndPaint, &ps)
-		fmt.Println("MessageHandler222 paint....")
+		// 	DrawColor(hdc, ps.RcPaint, 0xffff0000)
+		// 	return true
+		// }
+
+		// 分层
+		// 刷新子区域
+		// 绘制所有区域
+
+		iSaveDc := win.SaveDC(hdc)
+		// c.Root.Paint(hdc, ps.RcPaint)
+		for _, v := range c.R2 {
+			if v2, ok := v.(DoControlUI); ok {
+				fmt.Println("-==================---")
+				v2.Paint(hdc, ps.RcPaint)
+				// for _, v3 := range v2.Item {
+				// 	if v4, ok := v3.(*XMLControlUI); ok {
+				// 		v3.
+				// 			fmt.Println("XMLControlUI", v4)
+				// 	}
+				// }
+			}
+		}
+		win.RestoreDC(hdc, iSaveDc)
 		// var ps win.PAINTSTRUCT
 		// hdc := win.BeginPaint(c.HWndPaint, &ps)
 		// var cl Color
@@ -110,10 +152,32 @@ func (c *PaintManagerUI) MessageHandler(msg uint32, wParam, lParam uintptr) bool
 		// win.DeleteObject(hPen)
 		// fmt.Println("paint....")
 		// win.InvalidateRect(c.HWndPaint, nil, false)
-		return true
+		return true, 0
+
 		break
+	case win.WM_GETMINMAXINFO:
+		// 鼠标移动窗口,改变窗口大小,都会调用
+		var lpmmi *win.MINMAXINFO
+		lpmmi = (*win.MINMAXINFO)(unsafe.Pointer(lParam))
+		if lpmmi != nil {
+			fmt.Println("MINMAXINFO ...", lpmmi)
+			if c.WindowUI.MininfoUI.Cx > 0 {
+				lpmmi.PtMinTrackSize.X = c.WindowUI.MininfoUI.Cx
+			}
+			if c.WindowUI.MininfoUI.Cy > 0 {
+				lpmmi.PtMinTrackSize.Y = c.WindowUI.MininfoUI.Cy
+			}
+			if c.WindowUI.MaxinfoUI.Cx > 0 {
+				lpmmi.PtMaxTrackSize.X = c.WindowUI.MaxinfoUI.Cx
+			}
+			if c.WindowUI.MaxinfoUI.Cy > 0 {
+				lpmmi.PtMaxTrackSize.Y = c.WindowUI.MaxinfoUI.Cy
+			}
+		}
+		return true, 0
 	}
-	return false
+
+	return false, 0
 }
 
 var ii int
@@ -131,5 +195,10 @@ func (c *PaintManagerUI) TranslateMessage(msg *win.MSG) bool {
 		return true
 	}
 	return false
+
+}
+
+func (c *PaintManagerUI) SetInitSize(cx, cy int32) {
+	c.WindowUI.SetInitSize(cx, cy, c.HWndPaint)
 
 }
