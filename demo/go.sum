@@ -1,7 +1,5 @@
 github.com/beevik/etree v1.1.0 h1:T0xke/WvNtMoCqgzPhkX2r4rjY3GDZFi+FjpRZY2Jbs=
 github.com/beevik/etree v1.1.0/go.mod h1:r8Aw8JqVegEf0w2fDnATrX9VpkMcyFeM0FhwO62wh+A=
-github.com/fjs-icu/win v0.0.0-20210523044725-21ed43428fda h1:4Uf4qhs7qqcvEx2sBfmZsXPU/CuJqMgtalOFNII0B8g=
-github.com/fjs-icu/win v0.0.0-20210523044725-21ed43428fda/go.mod h1:H/vDN0VS9YZ1jhz/VyB2P5DtVx7NSL8OTGHWx1wCGcA=
 github.com/go-ole/go-ole v1.2.5 h1:t4MGB5xEDZvXI+0rMjjsfBsD7yAgp/s9ZDkL1JndXwY=
 github.com/go-ole/go-ole v1.2.5/go.mod h1:pprOEPIfldk/42T2oK7lQ4v4JSDwmV0As9GaiUsvbm0=
 golang.org/x/sys v0.0.0-20190916202348-b4ddaad3f8a3/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=

@@ -24,13 +24,12 @@ type Default struct {
 
 type WindowXml struct {
 	XMLName     xml.Name `xml:"Window"`
-	Size        string   `xml:"size,attr"` // 最初窗口大小
-	SizeBox     string   `xml:"sizebox,attr"`
-	Caption     string   `xml:"caption,attr"` // 标题栏的区域(鼠标可以托动的区域)
-	Roundcorner string   `xml:"roundcorner,attr"`
-	Mininfo     string   `xml:"mininfo,attr"` // 窗口最小Size
-	Maxinfo     string   `xml:"maxinfo,attr"` // 窗口最大Size
-	Showdirty   string   `xml:"showdirty,attr"`
+	Size        string   `xml:"size,attr"`        // 最初窗口大小
+	SizeBox     string   `xml:"sizebox,attr"`     // 标题栏和客户区之间的可以改变大小的上下箭头或左右箭头,区域越大,越容易方便改变窗口大小
+	Caption     string   `xml:"caption,attr"`     // 标题栏的区域(鼠标可以托动的区域),鼠标放上去小箭头的模样.
+	Roundcorner string   `xml:"roundcorner,attr"` // 设置窗口的圆角大小,值只有x,y起作用
+	Mininfo     string   `xml:"mininfo,attr"`     // 窗口最小Size
+	Maxinfo     string   `xml:"maxinfo,attr"`     // 窗口最大Size
 
 	Include []Include `xml:"Include"`
 	Font    []Font    `xml:"Font"`
@@ -41,9 +40,11 @@ type WindowUI struct {
 	Xml      WindowXml
 	InitSize Size
 
-	MininfoUI Size
-	MaxinfoUI Size
-
+	MininfoUI   Size
+	MaxinfoUI   Size
+	Caption     win.RECT
+	SizeBox     win.RECT
+	Roundcorner Size
 	XMLNodeItem []interface{} //xml控件集合
 	NodeItem    []interface{} //绘制控件集合
 
@@ -81,6 +82,39 @@ func (c *WindowUI) Parse(content []byte, paint *PaintManagerUI) {
 		if len(ip) > 1 {
 			c.MaxinfoUI.Cx = ip[0]
 			c.MaxinfoUI.Cy = ip[1]
+
+		}
+	}
+
+	tmp = c.Xml.Caption
+	if tmp != "" {
+		ip := GetSpLitInt32(tmp, ",")
+		if len(ip) > 1 {
+			c.Caption.Left = ip[0]
+			c.Caption.Top = ip[1]
+			c.Caption.Right = ip[2]
+			c.Caption.Bottom = ip[3]
+
+		}
+	}
+
+	tmp = c.Xml.SizeBox
+	if tmp != "" {
+		ip := GetSpLitInt32(tmp, ",")
+		if len(ip) > 1 {
+			c.SizeBox.Left = ip[0]
+			c.SizeBox.Top = ip[1]
+			c.SizeBox.Right = ip[2]
+			c.SizeBox.Bottom = ip[3]
+
+		}
+	}
+	tmp = c.Xml.Roundcorner
+	if tmp != "" {
+		ip := GetSpLitInt32(tmp, ",")
+		if len(ip) > 1 {
+			c.Roundcorner.Cx = ip[0]
+			c.Roundcorner.Cy = ip[1]
 
 		}
 	}

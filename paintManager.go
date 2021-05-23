@@ -64,19 +64,7 @@ func (c *PaintManagerUI) MessageHandler(msg uint32, wParam, lParam uintptr) (boo
 	case win.WM_NCHITTEST:
 		{
 			// 移动无标题栏的窗口(鼠标在客户区拖动移动窗口,非标题栏区域)
-			fmt.Println("nchi...")
-			x := int32(win.GET_X_LPARAM(lParam))
-			y := int32(win.GET_Y_LPARAM(lParam))
-			var pt win.POINT
-			pt.X = x
-			pt.Y = y
-			win.ScreenToClient(c.HWndPaint, &pt)
-			// var p2 *win.CREATESTRUCT
-
-			// p2 = (*win.CREATESTRUCT)(unsafe.Pointer(lParam))
-			return true, win.HTCAPTION
-
-			// return win.HTCAPTION
+			return c.OnNcHitTest(msg, wParam, lParam)
 		}
 	// case win.WM_ERASEBKGND:
 	case win.WM_PAINT:
@@ -154,30 +142,98 @@ func (c *PaintManagerUI) MessageHandler(msg uint32, wParam, lParam uintptr) (boo
 		// win.InvalidateRect(c.HWndPaint, nil, false)
 		return true, 0
 
-		break
 	case win.WM_GETMINMAXINFO:
 		// 鼠标移动窗口,改变窗口大小,都会调用
-		var lpmmi *win.MINMAXINFO
-		lpmmi = (*win.MINMAXINFO)(unsafe.Pointer(lParam))
-		if lpmmi != nil {
-			fmt.Println("MINMAXINFO ...", lpmmi)
-			if c.WindowUI.MininfoUI.Cx > 0 {
-				lpmmi.PtMinTrackSize.X = c.WindowUI.MininfoUI.Cx
-			}
-			if c.WindowUI.MininfoUI.Cy > 0 {
-				lpmmi.PtMinTrackSize.Y = c.WindowUI.MininfoUI.Cy
-			}
-			if c.WindowUI.MaxinfoUI.Cx > 0 {
-				lpmmi.PtMaxTrackSize.X = c.WindowUI.MaxinfoUI.Cx
-			}
-			if c.WindowUI.MaxinfoUI.Cy > 0 {
-				lpmmi.PtMaxTrackSize.Y = c.WindowUI.MaxinfoUI.Cy
-			}
-		}
-		return true, 0
+
+		return c.OnGetMinMaxInfo(msg, wParam, lParam)
+
+	case win.WM_SIZE:
+		return c.OnSize(msg, wParam, lParam)
+
 	}
 
 	return false, 0
+}
+
+func (c *PaintManagerUI) OnSize(msg uint32, wParam, lParam uintptr) (bool, uintptr) {
+	szRoundcorner := c.WindowUI.Roundcorner
+	if !win.IsIconic(c.HWndPaint) && (szRoundcorner.Cx > 0 || szRoundcorner.Cy > 0) {
+		var rcClient win.RECT
+		win.GetClientRect(c.HWndPaint, &rcClient)
+
+		hrgn := win.CreateRoundRectRgn(rcClient.Left, rcClient.Top, rcClient.Right, rcClient.Bottom, szRoundcorner.Cx, szRoundcorner.Cy)
+		win.SetWindowRgn(c.HWndPaint, hrgn, true)
+		win.DeleteObject(win.HGDIOBJ(hrgn))
+	}
+	return true, 0
+
+}
+
+func (c *PaintManagerUI) OnGetMinMaxInfo(msg uint32, wParam, lParam uintptr) (bool, uintptr) {
+	var lpmmi *win.MINMAXINFO
+	lpmmi = (*win.MINMAXINFO)(unsafe.Pointer(lParam))
+	if lpmmi != nil {
+		if c.WindowUI.MininfoUI.Cx > 0 {
+			lpmmi.PtMinTrackSize.X = c.WindowUI.MininfoUI.Cx
+		}
+		if c.WindowUI.MininfoUI.Cy > 0 {
+			lpmmi.PtMinTrackSize.Y = c.WindowUI.MininfoUI.Cy
+		}
+		if c.WindowUI.MaxinfoUI.Cx > 0 {
+			lpmmi.PtMaxTrackSize.X = c.WindowUI.MaxinfoUI.Cx
+		}
+		if c.WindowUI.MaxinfoUI.Cy > 0 {
+			lpmmi.PtMaxTrackSize.Y = c.WindowUI.MaxinfoUI.Cy
+		}
+	}
+	return true, 0
+}
+
+func (c *PaintManagerUI) OnNcHitTest(msg uint32, wParam, lParam uintptr) (bool, uintptr) {
+	x := int32(win.GET_X_LPARAM(lParam))
+	y := int32(win.GET_Y_LPARAM(lParam))
+	var pt win.POINT
+	pt.X = x
+	pt.Y = y
+	win.ScreenToClient(c.HWndPaint, &pt)
+	var rcClient win.RECT
+	win.GetClientRect(c.HWndPaint, &rcClient)
+
+	if !win.IsZoomed(c.HWndPaint) {
+		rcSizeBox := c.WindowUI.SizeBox
+		if pt.Y < rcClient.Top+rcSizeBox.Top {
+			if pt.X < rcClient.Left+rcSizeBox.Left {
+				return true, win.HTTOPLEFT
+			}
+			if pt.X > rcClient.Right-rcSizeBox.Right {
+				return true, win.HTTOPRIGHT
+			}
+			return true, win.HTTOP
+		} else if pt.Y > rcClient.Bottom-rcSizeBox.Bottom {
+			if pt.X < rcClient.Left+rcSizeBox.Left {
+				return true, win.HTBOTTOMLEFT
+			}
+			if pt.X > rcClient.Right-rcSizeBox.Right {
+				return true, win.HTBOTTOMRIGHT
+			}
+			return true, win.HTBOTTOM
+		}
+		if pt.X < rcClient.Left+rcSizeBox.Left {
+			return true, win.HTLEFT
+		}
+		if pt.X > rcClient.Right-rcSizeBox.Right {
+			return true, win.HTRIGHT
+		}
+	}
+	rcCaption := c.WindowUI.Caption
+	if (pt.X >= rcClient.Left+rcCaption.Left) && (pt.X < rcClient.Right-rcCaption.Right) && pt.Y >= rcCaption.Top && pt.Y < rcCaption.Bottom {
+		// 判断当前点是什么控件,如果是按钮等不能实现拖动控件
+		// 判断当前点所在的最外层控件是否隐藏,判断当前点处于最里层的控件是什么. 暂未想好如何实现.
+		return true, win.HTCAPTION
+
+	}
+
+	return true, win.HTCLIENT
 }
 
 var ii int

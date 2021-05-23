@@ -8,8 +8,10 @@ type WidgetBase struct {
 
 func NewWidgetBase() (*WidgetBase, error) {
 	tt := new(WidgetBase)
-	// win.WS_OVERLAPPEDWINDOW,
-	err := InitWindow(tt, nil, "widgetBase", win.WS_OVERLAPPEDWINDOW, 0)
+	// win.WS_OVERLAPPEDWINDOW // 包含菜单栏
+	// err := InitWindow(tt, nil, "widgetBase", win.WS_OVERLAPPEDWINDOW, 0)
+	// err := InitWindow(tt, nil, "widgetBase", win.WS_EX_STATICEDGE|win.WS_EX_APPWINDOW, 0)
+	err := InitWindow(tt, nil, "widgetBase", win.WS_POPUP, 0)
 
 	return tt, err
 }
