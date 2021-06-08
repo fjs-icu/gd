@@ -13,7 +13,7 @@
 		<Control height="4"/>
 
 	</Container>
- 	<Container name="江湖jianghu2" inset="10,6,10,6" bkcolor="#FFEA679F" colorhsl="true" bkimage="file='voice_rect.png' xtiled='true' ytiled='true' dest='0,0,200,400'">
+ 	<Container name="江湖jianghu2" inset="10,6,10,6" bkcolor="#F11A679F" colorhsl="true" bkimage="file='voice_rect.png' xtiled='true' ytiled='true' dest='0,0,200,400'">
 		<Control name="alpha_controlor" min="20" max="255" value="255"/>
 		<Control height="4"/>
 

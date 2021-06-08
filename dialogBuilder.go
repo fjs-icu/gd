@@ -127,14 +127,14 @@ func (c *DialogBuilder) RangeListParse(el []*etree.Element) (r1 []interface{}, r
 			pc := new(XMLContainer)
 			x1 := new(XMLContainerUI)
 			x2 := new(ContainerUI)
-			pc.ContainerUI = x2
-			pc.XMLContainerUI = x1
+			pc.UI = x2
+			pc.XML = x1
 			// var c1 *ContainerUI
 			for _, v2 := range v.Attr {
 				fmt.Printf("Control :[%+v]\n", v2)
 				pc.SetAttr(v2)
 			}
-			fmt.Printf("Container CoreUI  :[%+v]\n", pc.CoreUI.XMLControlUI)
+			fmt.Printf("Container CoreUI  :[%+v]\n", pc.CoreUI.XML)
 
 			vt1, vt2 := c.RangeListParse(vElement)
 			x1.Item = append(x1.Item, vt1...)
