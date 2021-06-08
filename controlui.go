@@ -67,8 +67,14 @@ func (c *XMLControl) SetAttr(attr etree.Attr) {
 	case "padding":
 		c.XML.Padding = attr.Value
 	case "bkcolor":
-		c.XML.Bkcolor = attr.Value
-		c.UI.Bkcolor = attr.Value
+		str := attr.Value
+		str = strings.Replace(str, "0x", "", -1)
+		str = strings.Replace(str, "#", "", -1)
+
+		str = strings.Replace(str, "0X", "", -1)
+
+		c.XML.Bkcolor = str
+		c.UI.Bkcolor = str
 
 	case "bkcolor1":
 		c.XML.Pos = attr.Value
@@ -139,11 +145,7 @@ type ControlUI struct {
 }
 
 func String2Int16(src string) uint64 {
-	numberStr := strings.Replace(src, "0x", "", -1)
-	numberStr = strings.Replace(src, "#", "", -1)
-
-	numberStr = strings.Replace(numberStr, "0X", "", -1)
-	n, err := strconv.ParseUint(numberStr, 16, 64)
+	n, err := strconv.ParseUint(src, 16, 64)
 	if err != nil {
 		fmt.Println("ControlUI DoPaint", err)
 
