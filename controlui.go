@@ -61,13 +61,14 @@ type XMLControl struct {
 }
 
 func (c *XMLControl) SetAttr(attr etree.Attr) {
+	va := attr.Value
 	switch attr.Key {
 	case "pos":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "padding":
-		c.XML.Padding = attr.Value
+		c.XML.Padding = va
 	case "bkcolor":
-		str := attr.Value
+		str := va
 		str = strings.Replace(str, "0x", "", -1)
 		str = strings.Replace(str, "#", "", -1)
 
@@ -77,61 +78,61 @@ func (c *XMLControl) SetAttr(attr etree.Attr) {
 		c.UI.Bkcolor = str
 
 	case "bkcolor1":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "bkcolor2":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "bkcolor3":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "bordercolor":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "focusbordercolor":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "colorhsl":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "bordersize":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "borderstyle":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "borderround":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "bkimage":
-		c.XML.Bkimage = attr.Value
+		c.XML.Bkimage = va
 	case "width":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "height":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "minwidth":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "minheight":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "maxwidth":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "maxheight":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "name":
-		c.XML.Name = attr.Value
+		c.XML.Name = va
 	case "text":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "tooltip":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "userdata":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "tag":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "enabled":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "mouse":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "keyboard":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "visible":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "float":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "menu":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 	case "virtualwnd":
-		c.XML.Pos = attr.Value
+		c.XML.Pos = va
 
 	}
 }
