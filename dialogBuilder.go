@@ -38,24 +38,23 @@ func (c *DialogBuilder) Parse(sfilexml string, manager *PaintManagerUI, xw *Wind
 	}
 	root := doc.SelectElement("Window")
 	fmt.Println("ROOT element:", root.Tag)
-	c.RangeListParse(root.ChildElements())
-	vt1, _vt2 := c.RangeListParse(root.ChildElements())
-	manager.R1 = vt1
-	manager.R2 = _vt2
+	// c.RangeListParse(root.ChildElements(), manager)
+	vt1 := c.RangeListParse(root.ChildElements(), manager)
+	manager.R1 = append(manager.R1, vt1...)
 
 	// x1.Item = vt1
 	// x2.Item = vt2
-	for _, v := range vt1 {
-		if v2, ok := v.(*XMLContainerUI); ok {
-			fmt.Println("v2==========------", v2, ok)
-			// 	for _, v3 := range v2.Item {
-			// 		if v4, ok := v3.(*XMLControlUI); ok {
+	// for _, v := range vt1 {
+	// 	if v2, ok := v.(*XMLContainerUI); ok {
+	// 		fmt.Println("v2==========------", v2, ok)
+	// 		// 	for _, v3 := range v2.Item {
+	// 		// 		if v4, ok := v3.(*XMLControlUI); ok {
 
-			// 			fmt.Println("XMLControlUI", v4)
-			// 		}
-			// 	}
-		}
-	}
+	// 		// 			fmt.Println("XMLControlUI", v4)
+	// 		// 		}
+	// 		// 	}
+	// 	}
+	// }
 	// fmt.Println("vt2", vt2)
 
 	// fmt.Println(xw.NodeItem)
@@ -73,7 +72,7 @@ func (c *DialogBuilder) Parse(sfilexml string, manager *PaintManagerUI, xw *Wind
 	// }
 }
 
-func (c *DialogBuilder) RangeListParse(el []*etree.Element) (r1 []interface{}, r2 []interface{}) {
+func (c *DialogBuilder) RangeListParse(el []*etree.Element, manager *PaintManagerUI) (r1 []interface{}) {
 	for _, v := range el {
 		var vElement []*etree.Element
 		for _, v2 := range v.Child {
@@ -102,13 +101,20 @@ func (c *DialogBuilder) RangeListParse(el []*etree.Element) (r1 []interface{}, r
 		// case "Slider":
 
 		case "Control":
+			pc := NewXMLControl()
+
 			for _, v2 := range v.Attr {
 				fmt.Printf("Control :[%+v]\n", v2)
+				pc.SetAttr(v2)
 			}
-			x1 := new(XMLControlUI)
-			x2 := new(ControlUI)
-			r1 = append(r1, x1)
-			r2 = append(r2, x2)
+			pc.SetPaint(manager)
+
+			vt1 := c.RangeListParse(vElement, manager)
+			pc.Item = append(pc.Item, vt1...)
+			// x2.Item = vt2
+			// pc.Item =
+			r1 = append(r1, pc)
+			// r2 = append(r2, x2)
 
 		// case "ActiveX":
 		// case "GifAnim":
@@ -124,23 +130,18 @@ func (c *DialogBuilder) RangeListParse(el []*etree.Element) (r1 []interface{}, r
 		// case "TabLayout":
 		// case "ScrollBar":
 		case "Container":
-			pc := new(XMLContainer)
-			x1 := new(XMLContainerUI)
-			x2 := new(ContainerUI)
-			pc.UI = x2
-			pc.XML = x1
+
+			pc := NewXMLContainer()
 			// var c1 *ContainerUI
 			for _, v2 := range v.Attr {
 				fmt.Printf("Control :[%+v]\n", v2)
 				pc.SetAttr(v2)
 			}
-			fmt.Printf("Container CoreUI  :[%+v]\n", pc.CoreUI.XML)
+			// fmt.Printf("Container CoreUI  :[%+v]\n", pc.DoControlUI.XML)
 
-			vt1, vt2 := c.RangeListParse(vElement)
-			x1.Item = append(x1.Item, vt1...)
-			x2.Item = vt2
-			r1 = append(r1, x1)
-			r2 = append(r2, x2)
+			vt1 := c.RangeListParse(vElement, manager)
+			pc.Item = append(pc.Item, vt1...)
+			r1 = append(r1, pc)
 
 			// XMLContainer
 			// fmt.Printf("Child :[%+v]\n", v.Child)

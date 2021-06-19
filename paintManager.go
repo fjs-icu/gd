@@ -21,6 +21,7 @@ type PaintManagerUI struct {
 	// RootXml *WindowXml
 	WindowUI *WindowUI
 	DialogBuilder
+	BStartPaint bool // 是否开始绘制
 }
 
 func (c *PaintManagerUI) Init(hWnd win.HWND, pstrName string) {
@@ -85,10 +86,33 @@ func (c *PaintManagerUI) MessageHandler(msg uint32, wParam, lParam uintptr) (boo
 
 		iSaveDc := win.SaveDC(hdc)
 		// c.Root.Paint(hdc, ps.RcPaint)
-		for _, v := range c.R2 {
+		for _, v := range c.R1 {
+			// if v2, ok := v.(*XMLContainer); ok {
+			// 	fmt.Println("属于 XMLContainer ")
+			// 	v2.Paint(hdc, ps.RcPaint)
+			// 	// v2.DoPaint(hdc, ps.RcPaint)
+			// 	// for _, v3 := range v2.Item {
+			// 	// 	if v4, ok := v3.(*XMLControlUI); ok {
+			// 	// 		v3.
+			// 	// 			fmt.Println("XMLControlUI", v4)
+			// 	// 	}
+			// 	// }
+			// }
+			// if v2, ok := v.(*XMLControl); ok {
+			// 	fmt.Println("属于 XMLControl ")
+			// 	v2.Paint(hdc, ps.RcPaint)
+			// 	// v2.DoPaint(hdc, ps.RcPaint)
+			// 	// for _, v3 := range v2.Item {
+			// 	// 	if v4, ok := v3.(*XMLControlUI); ok {
+			// 	// 		v3.
+			// 	// 			fmt.Println("XMLControlUI", v4)
+			// 	// 	}
+			// 	// }
+			// }
 			if v2, ok := v.(DoControlUI); ok {
-				fmt.Println("-==================---")
+				fmt.Println("属于 DoControlUI ")
 				v2.Paint(hdc, ps.RcPaint)
+				// v2.DoPaint(hdc, ps.RcPaint)
 				// for _, v3 := range v2.Item {
 				// 	if v4, ok := v3.(*XMLControlUI); ok {
 				// 		v3.

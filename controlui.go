@@ -49,18 +49,56 @@ type XMLControlUI struct {
 	Float      string `xml:"float,attr"`
 	Menu       string `xml:"menu,attr"`
 	Virtualwnd string `xml:"virtualwnd,attr"`
-
-	Item []interface{}
 }
 
 type XMLControl struct {
-	ID  string        // 序号
-	XML *XMLControlUI // xml属性
-	UI  *ControlUI    // 控件真实属性
-
+	DoControlUI
+	ID       string        // 序号
+	XML      *XMLControlUI // xml属性
+	UI       *ControlUI    // 控件真实属性
+	HDCPaint *PaintManagerUI
+	Item     []interface{}
 }
 
+func NewXMLControl() *XMLControl {
+	pc := new(XMLControl)
+	x1 := new(XMLControlUI)
+	x2 := new(ControlUI)
+	pc.UI = x2
+	pc.XML = x1
+	return pc
+}
+
+func (c *XMLControl) Paint(hdc win.HDC, rcPaint win.RECT) bool {
+	fmt.Println("ControlUI DoPaint")
+	fmt.Println("ControlUI ============================")
+
+	if !c.DoPaint(hdc, rcPaint) {
+		return false
+	}
+	for _, v := range c.Item {
+		if v2, ok := v.(DoControlUI); ok {
+			v2.Paint(hdc, rcPaint)
+		}
+	}
+
+	return true
+}
+
+func (c *XMLControl) DoPaint(hdc win.HDC, rcPaint win.RECT) bool {
+	// 绘制 背景颜色-->背景图-->状态图-->文本-->边框
+	fmt.Printf("ControlUI DoPaint [%v]\n", c.UI.Bkcolor)
+
+	DrawColor(hdc, rcPaint, win.ARGB(c.UI.Bkcolor))
+	return true
+}
+
+func (c *XMLControl) SetPaint(pa *PaintManagerUI) {
+	c.HDCPaint = pa
+}
 func (c *XMLControl) SetAttr(attr etree.Attr) {
+	// 设置属性
+	fmt.Println("XMLControl SetAttr")
 	va := attr.Value
 	switch attr.Key {
 	case "pos":
@@ -75,8 +113,12 @@ func (c *XMLControl) SetAttr(attr etree.Attr) {
 		str = strings.Replace(str, "0X", "", -1)
 
 		c.XML.Bkcolor = str
-		c.UI.Bkcolor = str
+		icolor := String2Int16(str)
 
+		c.UI.Bkcolor = icolor
+		fmt.Println("ControlUI icolor ", icolor)
+
+		fmt.Println("XMLControl bkcolor", str)
 	case "bkcolor1":
 		c.XML.Pos = va
 	case "bkcolor2":
@@ -98,7 +140,7 @@ func (c *XMLControl) SetAttr(attr etree.Attr) {
 	case "bkimage":
 		c.XML.Bkimage = va
 	case "width":
-		c.XML.Pos = va
+		c.XML.Width = va
 	case "height":
 		c.XML.Pos = va
 	case "minwidth":
@@ -138,52 +180,78 @@ func (c *XMLControl) SetAttr(attr etree.Attr) {
 }
 
 type ControlUI struct {
-	DoControlUI
-	Cover   *ControlUI
-	Bkcolor string
-
-	Item []interface{}
+	Cover *ControlUI
+	// Bkcolor string
+	Bkcolor uint64
+	XYFixed Size // width="100" + height="30"（用处：尺寸,与pos相冲突，谁在后，以谁为准。）
+	Item    []interface{}
 }
 
 func String2Int16(src string) uint64 {
+	if src == "" {
+		return 0
+	}
 	n, err := strconv.ParseUint(src, 16, 64)
 	if err != nil {
-		fmt.Println("ControlUI DoPaint", err)
+		fmt.Println("ParseUint DoPaint", err)
 
-		panic(err)
+		// panic(err)
+		return 0
 	}
 	return n
 
 }
-func (c *ControlUI) Paint(hdc win.HDC, rcPaint win.RECT) bool {
-	fmt.Println("ControlUI DoPaint")
-	fmt.Println("ControlUI ============================")
-
-	if !c.DoPaint(hdc, rcPaint) {
-		return false
-	}
-	if c.Cover != nil {
-		return c.Cover.Paint(hdc, rcPaint)
-	}
-	return true
-}
-
-func (c *ControlUI) DoPaint(hdc win.HDC, rcPaint win.RECT) bool {
-	// 绘制 背景颜色-->背景图-->状态图-->文本-->边框
-	fmt.Println("ControlUI DoPaint")
-	icolor := String2Int16(c.Bkcolor)
-	fmt.Println("ControlUI icolor ", icolor)
-
-	DrawColor(hdc, rcPaint, win.ARGB(icolor))
-	return true
-}
 
 // 面板绘制
 type XMLContainer struct {
+	DoControlUI
+
 	ID     string          // 序号
 	XML    *XMLContainerUI // xml属性
 	UI     *ContainerUI    // 控件真实属性
 	CoreUI *XMLControl
+	Item   []interface{}
+}
+
+func NewXMLContainer() *XMLContainer {
+	pc := new(XMLContainer)
+	x1 := new(XMLContainerUI)
+	x2 := new(ContainerUI)
+	x3 := NewXMLControl()
+	pc.XML = x1
+	pc.UI = x2
+	pc.CoreUI = x3
+
+	return pc
+}
+
+func (c *XMLContainer) Paint(hdc win.HDC, rcPaint win.RECT) bool {
+	fmt.Println("ContainerUI DoPaint")
+
+	if !c.DoPaint(hdc, rcPaint) {
+		return false
+	}
+
+	for _, v := range c.Item {
+		if v2, ok := v.(DoControlUI); ok {
+			v2.Paint(hdc, rcPaint)
+		}
+	}
+
+	return true
+}
+
+func (c *XMLContainer) DoPaint(hdc win.HDC, rcPaint win.RECT) bool {
+	// 绘制 背景颜色-->背景图-->状态图-->文本-->边框
+	fmt.Println("ContainerUI DoPaint START")
+	// DrawColor(hdc, rcPaint, 0xffff0000)
+	// c.UI.UI.Paint(hdc, rcPaint)
+
+	c.CoreUI.Paint(hdc, rcPaint)
+
+	fmt.Println("ContainerUI DoPaint END")
+
+	return true
 }
 
 func (c *XMLContainer) SetAttr(attr etree.Attr) {
@@ -224,10 +292,7 @@ func (c *XMLContainer) SetAttr(attr etree.Attr) {
 	default:
 		{
 			if c.CoreUI == nil {
-				c.CoreUI = new(XMLControl)
-				c.CoreUI.XML = &c.XML.CoreUI
-				c.CoreUI.UI = &c.UI.UI
-
+				c.CoreUI = NewXMLControl()
 			}
 			c.CoreUI.SetAttr(attr)
 
@@ -247,8 +312,6 @@ type XMLContainerUI struct {
 	Childpadding    string `xml:"childpadding,attr"`
 	Childvalign     string `xml:"childvalign,attr"`
 	Childalign      string `xml:"childalign,attr"`
-
-	Item []interface{}
 }
 
 type ContainerUI struct {
@@ -257,24 +320,4 @@ type ContainerUI struct {
 
 	// 绘制子节点
 	Item []interface{}
-}
-
-func (c *ContainerUI) Paint(hdc win.HDC, rcPaint win.RECT) bool {
-	fmt.Println("ContainerUI DoPaint")
-
-	if !c.DoPaint(hdc, rcPaint) {
-		return false
-	}
-	if c.UI.Cover != nil {
-		return c.UI.Paint(hdc, rcPaint)
-	}
-	return true
-}
-
-func (c *ContainerUI) DoPaint(hdc win.HDC, rcPaint win.RECT) bool {
-	// 绘制 背景颜色-->背景图-->状态图-->文本-->边框
-	fmt.Println("ContainerUI DoPaint")
-	// DrawColor(hdc, rcPaint, 0xffff0000)
-	c.UI.Paint(hdc, rcPaint)
-	return true
 }

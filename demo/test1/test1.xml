@@ -8,15 +8,14 @@
 	<Default shared="true" name="Option" value="textcolor=&quot;#FFbac0c5&quot; hottextcolor=&quot;#FF386382&quot; selectedtextcolor=&quot;#FF386382&quot; disabledtextcolor=&quot;#FFbac0c5&quot; textpadding=&quot;18,2,0,0&quot; align=&quot;left&quot; selectedimage=&quot;file='Button/RadioBtnSel.png' source='0,0,13,13' dest='0,5,14,19'&quot; normalimage=&quot;file='Button/RadioBtnNon.png' source='0,0,13,13' dest='0,5,14,19'&quot;" />
 	<Default shared="true" name="CheckBox" value="textcolor=&quot;#FFbac0c5&quot; hottextcolor=&quot;#FF386382&quot; selectedtextcolor=&quot;#FF386382&quot; disabledtextcolor=&quot;#FFbac0c5&quot; textpadding=&quot;20,2,0,0&quot; align=&quot;left&quot; selectedimage=&quot;file='Icon/checked.png' dest='0,2,16,18'&quot; normalimage=&quot;file='Icon/unchecked.png' dest='0,2,16,18'&quot;" />
 	 -->
-	<Container name="江湖jianghu" inset="10,6,10,6" bkcolor="#FFEA679F" colorhsl="true" bkimage="file='voice_rect.png' xtiled='true' ytiled='true' dest='0,0,200,400'">
-		<Control name="alpha_controlor" min="20" max="255" value="255"/>
-		<Control height="4"/>
+ 	<Container name="江湖jianghu2" inset="10,6,10,6" bkcolor="#F11FFFFF" colorhsl="true" bkimage="file='voice_rect.png' xtiled='true' ytiled='true' dest='0,0,200,400'">
+		<!-- <Control name="alpha_controlor" min="20" max="255" value="255"/>
+		<Control height="4"/> -->
 
 	</Container>
- 	<Container name="江湖jianghu2" inset="10,6,10,6" bkcolor="#F11A679F" colorhsl="true" bkimage="file='voice_rect.png' xtiled='true' ytiled='true' dest='0,0,200,400'">
-		<Control name="alpha_controlor" min="20" max="255" value="255"/>
-		<Control height="4"/>
+	  <!-- <Control width="300" height="200" bkcolor="#FF111F9F">
+	   <Control width="100" height="100" bkcolor="#FF11FF9F" /> 
 
-	</Container>
+	  </Control> -->
 </Window>
 
